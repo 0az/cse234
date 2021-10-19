@@ -1,0 +1,8 @@
+# vim: set ft=ini expandtab ts=2 sts=2 sw=4 tw=80:
+[flake8]
+max-line-length = 80
+max-complexity = 12
+
+ignore = E302, E501
+
+pytest-fixture-no-parentheses = false
