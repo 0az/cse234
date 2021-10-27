@@ -29,12 +29,22 @@ version = '0.0.0'
 description = ''
 authors = []
 
+[[tool.poetry.packages]]
+include = 'ts_mop'
+from = 'src'
+
 [tool.poetry.dependencies]
 python = '~3.9'
 
 cerebro-dl = { path = 'vendor/cerebro', develop = true }
+statsmodels = '^0.13.0'
+scikit-learn = '^1.0'
+numpy = '^1.21.3'
+sktime = '^0.8.0'
 
 [tool.poetry.dev-dependencies]
+black = '^21.9b0'
+isort = '^5.9.3'
 
 [build-system]
 requires = ['poetry-core>=1.0.0']
