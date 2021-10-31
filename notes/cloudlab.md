@@ -15,3 +15,6 @@ The following nodes balance utility and availability.
 |    c240g5 |    Wisc |  GPU |    32 |    2 |    20 | 192 | 480 |     SATA | 1000 |    21378 |  Medium |
 |     c6420 | Clemson |  CPU |    72 |    2 |    32 | 384 |   0 |      N/A | 2000 |      N/A |    High |
 |     r7525 | Clemson |  GPU |    15 |    2 |    64 | 512 |   0 |      N/A | 2000 |    72534 | Highest |
+
+- Ubuntu 20.04 URN
+  - `urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU14-64-STD`
