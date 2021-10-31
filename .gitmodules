@@ -1,3 +1,4 @@
 [submodule "vendor/cerebro"]
 	path = vendor/cerebro
 	url = git@github.com:ADALabUCSD/cerebro-system.git
+	branch = master
