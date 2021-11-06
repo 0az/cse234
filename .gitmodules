@@ -2,3 +2,7 @@
 	path = vendor/cerebro
 	url = git@github.com:ADALabUCSD/cerebro-system.git
 	branch = master
+[submodule "vendor/emulab-openstack"]
+	path = vendor/emulab-openstack
+	url = https://gitlab.flux.utah.edu/johnsond/openstack-build-ubuntu.git
+	branch = master
