@@ -10,13 +10,13 @@ import pyspark.sql.functions as F
 
 def prep_data(source, window_size, sampling_factor, sample_strategy):
     """Pulls data from source and preps it into windows given strategy.
-    
+
     Parameters
     ----------
     source: path to petastorm time series dataset
     window_size: size of window to use
     sampling_factor: factor to downsample by
-    sample_strategy: strategy to use for sampling. One of 'mean' or 'boolean'  
+    sample_strategy: strategy to use for sampling. One of 'mean' or 'boolean'
 
     Returns
     -------
@@ -26,38 +26,71 @@ def prep_data(source, window_size, sampling_factor, sample_strategy):
         dataset = make_reader(reader)
         X = np.fromiter(map(lambda x: x[0], dataset), dtype=np.float32)
         y = np.fromiter(map(lambda x: x[1], dataset), dtype=np.float32)
-        windowed_ds = keras.utils.timeseries_dataset_from_array(X, y, window_size, sampling_rate = sampling_factor)
-    
+        windowed_ds = keras.utils.timeseries_dataset_from_array(
+            X, y, window_size, sampling_rate=sampling_factor
+        )
+
     return windowed_ds
 
-# TODO: how to get this to work with tensorflow? We could write these 
+
+# TODO: how to get this to work with tensorflow? We could write these
 # parquet files to disk (for each window size) and then read them in,
 # but that's not the best way to do it.
-def prep_data_spark(spark, dataset_url, window_size, sampling_factor, sample_strategy):
+def prep_data_spark(
+    spark, window_size_data, sampling_factor, sample_strategy, dataset_path=None
+):
     """
     Windows data that is already in a spark dataframe.
 
     Parameters
     ----------
-    spark: spark session
-    dataset_url: str, path to parquet file
+    spark: spark session or sql dataframe
+    dataset_path: str, Default None. path to parquet file
     window_size: size of window to use
-    sampling_factor: factor to downsample by
-    sample_strategy: strategy to use for sampling. One of 'mean' or 'boolean'  
+    label_aggregation_strategy: strategy to use for label aggregation. One of 'mean' or 'boolean'
 
     Returns
     -------
     windows: spark.sql.DataFrame containing windows
     """
-    TIME_COL = 'time'
-    VALUE_COL = 'value'
-    LABEL_COL = 'label'
+    from pyspark.sql import SparkSession
+    from pyspark.sql.dataframe import DataFrame
+    from pyspark.sql.window import Window
+    from pyspark.sql import functions as F
 
-    df = spark.read.parquet(dataset_url)
-    df = df.withColumn(TIME_COL, df[TIME_COL].cast('timestamp'))
+    TIME_COL = "time"
+    VALUE_COL = "value"
+    LABEL_COL = "label"
 
-    # apply windowing to (time, value) pairs
-    windowSpec = Window.partitionBy(LABEL_COL).orderBy(F.col(TIME_COL).desc())
-    windowed_df = df.over(windowSpec)
+    agg_strategies = {"mean": F.mean, "boolean": F.max}
 
-    return windowed_df
+    if isinstance(spark, DataFrame):
+        df = spark
+    elif isinstance(spark, SparkSession) and dataset_path is not None:
+        df = spark.read.parquet(dataset_path)
+    else:
+        raise TypeError("Expected spark context + filepath or spark.sql.DataFrame")
+
+    # cast timestamp column to timestamp type
+    df = df.withColumn(TIME_COL, df[TIME_COL].cast("timestamp"))
+
+    # apply windowing to values pairs
+    windowSpec = Window.orderBy(F.col(TIME_COL).desc())
+    windowSpecLabels = Window.orderBy(F.col(TIME_COL).desc()).rowsBetween(
+        -window_size_data, 0
+    )
+
+    agg_labels = agg_strategies[sample_strategy](LABEL_COL).over(windowSpecLabels)
+
+    windowed_df = df.withColumn(f"{VALUE_COL}_1", F.lag(VALUE_COL, 1).over(windowSpec))
+
+    if window_size > 1:
+        for i in range(2, window_size + 1):
+            windowed_df.withColumn(
+                f"{VALUE_COL}_{i}", F.lag(VALUE_COL, i).over(windowSpec)
+            )
+
+    # remove rows that can't fill a full window and add the labels to the df
+    return windowed_df.where(
+        F.col(f"{VALUE_COL}_{window_size}").isNotNull()
+    ).withColumn(LABEL_COL, agg_labels)
