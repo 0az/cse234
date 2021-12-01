@@ -60,10 +60,6 @@ def prep_data_spark(
     from pyspark.sql.dataframe import DataFrame
     from pyspark.sql.window import Window
 
-    TIME_COL = "time"
-    VALUE_COL = "value"
-    LABEL_COL = "label"
-
     agg_strategies = {"mean": F.mean, "boolean": F.max}
 
     if isinstance(spark, DataFrame):
@@ -94,16 +90,22 @@ def prep_data_spark(
 
     windowed_df = df.withColumn(f"{value_col}_1", F.lag(value_col, 1).over(windowSpec))
 
+    input_cols = [value_col, f"{value_col}_1"]
     if window_size > 1:
         for i in range(2, window_size + 1):
             windowed_df = windowed_df.withColumn(
                 f"{value_col}_{i}", F.lag(value_col, i).over(windowSpec)
             )
+            input_cols.append(f"{value_col}_{i}")
 
     # remove rows that can't fill a full window and add the labels to the df
-    return windowed_df.where(
+    windowed_df = windowed_df.where(
         F.col(f"{value_col}_{window_size}").isNotNull()
     ).withColumn(label_col, agg_labels)
+
+    assembler = VectorAssembler(inputCols=input_cols, outputCol='features')
+    return assembler.transform(windowed_df).select('features', label_col)
+
 
 def estimator_gen_fn(params):
     model = tf.keras.models.Sequential()
@@ -121,48 +123,50 @@ def estimator_gen_fn(params):
     return estimator
 
 
-spark = SparkSession.builder.getOrCreate()
+if __name__ == '__main__':
+    spark = SparkSession.builder.getOrCreate()
 
-df = (
-    spark.read.option("header", True)
-    .option("inferSchema", True)
-    .parquet("./data/dataTraining.parquet")
-)
+    df = (
+        spark.read.option("header", True)
+        .option("inferSchema", True)
+        .parquet("./data/dataTraining.parquet")
+    )
 
 
-prepped = prep_data_spark(
-    df.select("date", "Temperature", "Occupancy"),
-    3,
-    1,
-    "mean",
-    time_col="date",
-    value_col="Temperature",
-    label_col="Occupancy",
-)
+    prepped = prep_data_spark(
+        df.select("date", "Temperature", "Occupancy"),
+        3,
+        1,
+        "mean",
+        time_col="date",
+        value_col="Temperature",
+        label_col="Occupancy",
+    )
 
-assembler = VectorAssembler(inputCols=['Temperature', 'Temperature_1', 'Temperature_2', 'Temperature_3'], outputCol='features')
-prepped = assembler.transform(prepped)
+    # assembler = VectorAssembler(inputCols=['Temperature', 'Temperature_1', 'Temperature_2', 'Temperature_3'], outputCol='features')
+    # prepped = assembler.transform(prepped)
 
-print("Data Loaded.")
+    print("Data Loaded.")
 
-backend = SparkBackend(spark_context=spark.sparkContext, num_workers=2)
-store = LocalStore(prefix_path="/Users/arunavgupta/Documents/FA21/cse234/data/")
+    backend = SparkBackend(spark_context=spark.sparkContext, num_workers=4)
+    store = LocalStore(prefix_path="/Users/arunavgupta/Documents/FA21/cse234/data/")
 
-train_df, test_df = prepped.drop('date').randomSplit([0.8, 0.2])
-train_df = train_df.repartition(2)
+    # train_df, test_df = prepped.drop('date').randomSplit([0.8, 0.2])
+    # train_df = train_df.repartition(8)
+    train_df = prepped.drop('date').repartition(8)
 
-search_space = {"lr": hp_choice([0.01, 0.001, 0.0001])}
+    search_space = {"lr": hp_choice([0.01, 0.001, 0.0001])}
 
-model_selection = GridSearch(
-    backend,
-    store,
-    estimator_gen_fn,
-    search_space,
-    num_epochs=1,
-    evaluation_metric="loss",
-    label_columns=["Occupancy"],
-    feature_columns=["features"],    
-    verbose=1,
-)
+    model_selection = GridSearch(
+        backend,
+        store,
+        estimator_gen_fn,
+        search_space,
+        num_epochs=1,
+        evaluation_metric="loss",
+        label_columns=["Occupancy"],
+        feature_columns=["features"],    
+        verbose=1,
+    )
 
-model = model_selection.fit(train_df)
+    model = model_selection.fit(train_df)
