@@ -1,5 +1,3 @@
-from typing import Protocol
-
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import array_repeat, explode, lit
 
@@ -10,7 +8,7 @@ from .models import MLP
 LOGGER = get_logger(__name__)
 
 
-class Args(Protocol):
+class Args:
     size: int
 
 
