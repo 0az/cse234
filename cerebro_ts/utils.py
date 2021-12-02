@@ -2,7 +2,7 @@ import datetime
 
 
 def timestamp():
-    datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
+    return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
 
 
 def positive_int(s: str) -> int:

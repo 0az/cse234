@@ -7,21 +7,24 @@ OUTPUT = (logging.WARN + logging.ERROR) // 2
 
 
 def init_logging() -> None:
+    logging.addLevelName(OUTPUT, 'OUTPUT')
+    logging.setLoggerClass(OutputLogger)
+
     handler = logging.FileHandler(f'/tmp/cerebro-{timestamp()}.log')
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(
         logging.Formatter('%(asctime)s %(levelname)-5s %(name)s: %(message)s')
     )
+
     stdout = logging.StreamHandler()
     stdout.setLevel(logging.INFO)
     stdout.setFormatter(
         logging.Formatter('%(levelname)s %(name)s: %(message)s')
     )
+
     ROOT = logging.getLogger()
     ROOT.addHandler(handler)
     ROOT.addHandler(stdout)
-    logging.addLevelName(OUTPUT, 'OUTPUT')
-    logging.setLoggerClass(OutputLogger)
 
 
 # def checkpoint(logger: logging.Logger, label: str) -> None:
