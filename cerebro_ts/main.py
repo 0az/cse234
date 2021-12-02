@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import array_repeat, explode, lit
 
 from .generate import create_synthetic_dataframe
-from .logging import get_logger
+from .logs import get_logger
 from .models import MLP
 
 LOGGER = get_logger(__name__)

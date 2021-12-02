@@ -27,7 +27,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
-from .logging import get_logger
+from .logs import get_logger
 from .prepare import prep_data_spark
 
 LOGGER = get_logger(__name__)
