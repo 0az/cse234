@@ -1,4 +1,6 @@
 import os
+from itertools import product
+
 import tensorflow as tf
 import tensorflow.keras as keras
 from cerebro.backend import SparkBackend
@@ -19,17 +21,19 @@ from cerebro.tune import (
     hp_quniform,
     hp_uniform,
 )
+from joblib import Parallel, delayed
+from pyspark.ml.feature import VectorAssembler
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
-from pyspark.ml.feature import VectorAssembler
-from dataprep import prep_data_spark
-from joblib import Parallel, delayed
-from itertools import product
+
+from .logging import get_logger
+from .prepare import prep_data_spark
+
+LOGGER = get_logger(__name__)
 
 
 class MLP:
-
     DATAPREP_PARAMS = {"window_size", "sample_strategy"}
     DEFAULTS = {
         "window_size": [1],
@@ -73,8 +77,10 @@ class MLP:
                 #     self.params['input_dim'] = hp_choice(list(map(lambda x: x + 1, params[p])))
             else:
                 self.params[p] = hp_choice(params[p])
-        
-        valid_cols = set(dataset.columns).intersection(set([id_col, time_col, value_col, label_col]))
+
+        valid_cols = set(dataset.columns).intersection(
+            set([id_col, time_col, value_col, label_col])
+        )
         self.dataset = dataset.select(*valid_cols)
         self.spark = spark
         self.cache_prepped_data = cache_prepped_data
@@ -96,7 +102,9 @@ class MLP:
         self.backend = SparkBackend(
             spark_context=self.spark.sparkContext, num_workers=self.num_workers
         )
-        self.store = LocalStore(prefix_path=os.path.join(os.getcwd(), "cerebro_store"))
+        self.store = LocalStore(
+            prefix_path=os.path.join(os.getcwd(), "cerebro_store")
+        )
 
         if self.cache_prepped_data:
             # compute the dataframes now and cache them
@@ -139,39 +147,42 @@ class MLP:
 
         return estimator
 
-    def _train_one(self, w):
-        """Train one GridSearch task given a window size."""
-        self.input_dim = w + 1
-        model_selection = GridSearch(
-            self.backend,
-            self.store,
-            self.estimator_gen_fn,
-            search_space=self.params,
-            num_epochs=epochs,
-            evaluation_metric="loss",
-            label_columns=[self.label_col],
-            feature_columns=["features"],
-            verbose=1,
-        )
-        prepped = prep_data_spark(
-                self.dataset,
-                w,
-                1,
-                "mean",
-                time_col=self.time_col,
-                label_col=self.label_col,
-                id_col=self.id_col,
-                value_col=self.value_col,
-            ).repartition(self.num_workers)
-    
-        model = model_selection.fit(prepped)
+    # def _train_one(self, w):
+    #     """Train one GridSearch task given a window size."""
+    #     self.input_dim = w + 1
+    #     model_selection = GridSearch(
+    #         self.backend,
+    #         self.store,
+    #         self.estimator_gen_fn,
+    #         search_space=self.params,
+    #         num_epochs=epochs,
+    #         evaluation_metric="loss",
+    #         label_columns=[self.label_col],
+    #         feature_columns=["features"],
+    #         verbose=1,
+    #     )
+    #     prepped = prep_data_spark(
+    #         self.dataset,
+    #         w,
+    #         1,
+    #         "mean",
+    #         time_col=self.time_col,
+    #         label_col=self.label_col,
+    #         id_col=self.id_col,
+    #         value_col=self.value_col,
+    #     ).repartition(self.num_workers)
 
-        return (model.get_history()['val_acc'][0], model.keras())
+    #     model = model_selection.fit(prepped)
+
+    #     return (model.get_history()['val_acc'][0], model.keras())
 
     def train(self, epochs=10):
         """Trains model on pre-loaded data."""
         if not self.cache_prepped_data:
-            for w, s in product(self.dataprep_params["window_size"], self.dataprep_params["sample_strategy"]):
+            for w, s in product(
+                self.dataprep_params["window_size"],
+                self.dataprep_params["sample_strategy"],
+            ):
                 self.input_dim = w + 1
                 model_selection = GridSearch(
                     self.backend,
@@ -185,26 +196,29 @@ class MLP:
                     verbose=1,
                 )
                 prepped = prep_data_spark(
-                        self.dataset,
-                        w,
-                        1,
-                        s,
-                        time_col=self.time_col,
-                        label_col=self.label_col,
-                        id_col=self.id_col,
-                        value_col=self.value_col,
-                    ).repartition(self.num_workers)
-            
+                    self.dataset,
+                    w,
+                    1,
+                    s,
+                    time_col=self.time_col,
+                    label_col=self.label_col,
+                    id_col=self.id_col,
+                    value_col=self.value_col,
+                ).repartition(self.num_workers)
+
                 model = model_selection.fit(prepped)
                 if model.get_history()['val_acc'][0] > self.best_acc:
-                    print("New best model, window size:", w)
+                    LOGGER.info(f'Found new best model with window size {w}')
+
                     self.best_acc = model.get_history()['val_acc'][0]
                     self.best_model = model.keras()
                     self.best_w = w
-        print(f"Completed training, best model achieved val_acc = {self.best_acc} with window_size = {self.best_w}.")
+
+        LOGGER.print('MLP Training complete:')
+        LOGGER.print(f'\tValidation accuracy: {self.best_acc}')
+        LOGGER.print(f'\tWindow size: {self.best_w}')
 
         # task = delayed(self._train_one)
-
         # Parallel(n_jobs=len(self.dataprep_params["window_size"]))(task(w) for w in self.dataprep_params["window_size"])
 
     def predict(self, X):

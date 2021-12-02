@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from numpy.random import Generator, default_rng
 
+from .utils import positive_int
+
 _DEFAULT_RNG = default_rng()
 
 
@@ -89,12 +91,6 @@ def create_synthetic_dataframe(
 
 if __name__ == '__main__':
     BYTES_PER_ROW = 25
-
-    def positive_int(s: str) -> int:
-        i = int(s)
-        if i <= 0:
-            raise ValueError(f'Expected positive integer, got {s}')
-        return i
 
     class default(NamedTuple):
         value: Any = None

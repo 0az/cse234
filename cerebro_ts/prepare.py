@@ -18,10 +18,11 @@ from cerebro.tune import (
     hp_quniform,
     hp_uniform,
 )
+from pyspark.ml.feature import VectorAssembler
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.window import Window
-from pyspark.ml.feature import VectorAssembler
 
 
 def prep_data_spark(
@@ -55,11 +56,6 @@ def prep_data_spark(
         'feature' - vector-valued column of windowed data
         'label' - scalar-valued column of labels
     """
-    from pyspark.sql import SparkSession
-    from pyspark.sql import functions as F
-    from pyspark.sql.dataframe import DataFrame
-    from pyspark.sql.window import Window
-
     agg_strategies = {"mean": F.mean, "boolean": F.max}
 
     if isinstance(spark, DataFrame):
@@ -67,7 +63,9 @@ def prep_data_spark(
     elif isinstance(spark, SparkSession) and dataset_path is not None:
         df = spark.read.parquet(dataset_path)
     else:
-        raise TypeError("Expected spark context + filepath or spark.sql.DataFrame")
+        raise TypeError(
+            "Expected spark context + filepath or spark.sql.DataFrame"
+        )
 
     # cast timestamp column to timestamp type
     df = df.withColumn(time_col, df[time_col].cast("timestamp"))
@@ -86,9 +84,13 @@ def prep_data_spark(
             -window_size, 0
         )
 
-    agg_labels = agg_strategies[sample_strategy](label_col).over(windowSpecLabels)
+    agg_labels = agg_strategies[sample_strategy](label_col).over(
+        windowSpecLabels
+    )
 
-    windowed_df = df.withColumn(f"{value_col}_1", F.lag(value_col, 1).over(windowSpec))
+    windowed_df = df.withColumn(
+        f"{value_col}_1", F.lag(value_col, 1).over(windowSpec)
+    )
 
     input_cols = [value_col, f"{value_col}_1"]
     if window_size > 1:
@@ -117,7 +119,11 @@ def estimator_gen_fn(params):
     loss = "mse"
 
     estimator = SparkEstimator(
-        model=model, optimizer=optimizer, loss=loss, metrics=["acc"], batch_size=8
+        model=model,
+        optimizer=optimizer,
+        loss=loss,
+        metrics=["acc"],
+        batch_size=8,
     )
 
     return estimator
@@ -131,7 +137,6 @@ if __name__ == '__main__':
         .option("inferSchema", True)
         .parquet("./data/dataTraining.parquet")
     )
-
 
     prepped = prep_data_spark(
         df.select("date", "Temperature", "Occupancy"),
@@ -149,7 +154,9 @@ if __name__ == '__main__':
     print("Data Loaded.")
 
     backend = SparkBackend(spark_context=spark.sparkContext, num_workers=4)
-    store = LocalStore(prefix_path="/Users/arunavgupta/Documents/FA21/cse234/data/")
+    store = LocalStore(
+        prefix_path="/Users/arunavgupta/Documents/FA21/cse234/data/"
+    )
 
     # train_df, test_df = prepped.drop('date').randomSplit([0.8, 0.2])
     # train_df = train_df.repartition(8)
@@ -165,7 +172,7 @@ if __name__ == '__main__':
         num_epochs=1,
         evaluation_metric="loss",
         label_columns=["Occupancy"],
-        feature_columns=["features"],    
+        feature_columns=["features"],
         verbose=1,
     )
 
