@@ -1,5 +1,6 @@
+import argparse
 from pathlib import Path
-from typing import Tuple
+from typing import Any, NamedTuple, Tuple
 
 import numpy as np
 import pandas as pd
@@ -84,3 +85,75 @@ def create_synthetic_dataframe(
             label=label.ravel(),
         )
     )
+
+
+if __name__ == '__main__':
+    BYTES_PER_ROW = 25
+
+    def positive_int(s: str) -> int:
+        i = int(s)
+        if i <= 0:
+            raise ValueError(f'Expected positive integer, got {s}')
+        return i
+
+    class default(NamedTuple):
+        value: Any = None
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        '--difficulty', choices=['easy', 'medium', 'hard'], default='easy'
+    )
+    ap.add_argument(
+        '--size',
+        type=int,
+        default=-1,
+        help='The approximate dataset size in MB',
+    )
+    ap.add_argument('--series-length', type=positive_int, default=25)
+    ap.add_argument('--series-count', type=positive_int, default=default(100))
+    ap.add_argument('--period', type=positive_int, default=10)
+    ap.add_argument('output', type=Path)
+    args = ap.parse_args()
+
+    if args.size != -1:
+        if not isinstance(args.series_count, default):
+            raise ValueError('Cannot specify size and series count')
+        args.series_count = int(
+            args.size * 1e6 // BYTES_PER_ROW // args.series_length
+        )
+    elif isinstance(args.series_count, default):
+        args.series_count = args.series_count.value
+
+    _base = dict(
+        length=args.series_length,
+        n_series=args.series_count,
+        shift=0,
+        period=args.period,
+        amplitude=1,
+        phase=0,
+        linear_increment=0,
+        noise_std=0,
+    )
+    if args.series_length <= args.period:
+        raise ValueError(
+            f'Series length is less than period ({args.period}),'
+            ' which may lead to poor results'
+        )
+
+    difficulty = {
+        'easy': {},
+        'medium': dict(
+            linear_increment=0.01,
+            noise_std=0.2,
+        ),
+        'hard': dict(
+            linear_increment=0.1,
+            noise_std=0.4,
+        ),
+    }
+    for level, d in difficulty.items():
+        difficulty[level] = _base | d
+
+    df = create_synthetic_dataframe(**difficulty[args.difficulty])
+
+    df.to_parquet(str(args.output), index=False)
