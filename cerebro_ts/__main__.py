@@ -1,6 +1,6 @@
 import argparse
 
-from .utils import positive_int
+from cerebro_ts.utils import positive_int
 
 ap = argparse.ArgumentParser()
 ap.add_argument(
@@ -14,8 +14,8 @@ args = ap.parse_args()
 
 
 # Lazy imports
-from .logging import init_logging
-from .main import main
+from cerebro_ts.logging import init_logging
+from cerebro_ts.main import main
 
 init_logging()
 main(args)  # type: ignore
