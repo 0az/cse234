@@ -14,8 +14,12 @@ args = ap.parse_args()
 
 
 # Lazy imports
+
 from cerebro_ts.logs import init_logging
+
+# Needs to happen before main is imported
+init_logging()
+
 from cerebro_ts.main import main
 
-init_logging()
 main(args)  # type: ignore
