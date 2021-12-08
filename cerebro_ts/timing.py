@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from time import perf_counter
-from typing import Dict, List, NamedTuple
-
-
-class Split(NamedTuple):
-    name: str
-    value: float
+from typing import Dict, List
 
 
 @dataclass
@@ -15,7 +10,6 @@ class Timer:
     clock: Callable[[], float] = perf_counter
     splits: Dict[str, List[float]] = field(default_factory=dict)
     base_time: float = float('-inf')
-    # splits: List[Split] = field(default_factory=list)
 
     def start(self):
         self.base_time = self.clock()
