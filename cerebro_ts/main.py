@@ -52,7 +52,7 @@ def main(args: Args):
     df = df.withColumn('_void', explode(array_repeat(lit(None), args.size)))
     df = df.drop('_void')
     df = df.select(
-        col('id'), col('time'), col('feature') + randn(), col('label')
+        col('id'), col('time'), (col('feature') + randn()).alias('feature'), col('label')
     )
     timer.split('spark df prep')
 
