@@ -52,7 +52,10 @@ def main(args: Args):
     df = df.withColumn('_void', explode(array_repeat(lit(None), args.size)))
     df = df.drop('_void')
     df = df.select(
-        col('id'), col('time'), (col('feature') + randn()).alias('feature'), col('label')
+        col('id'),
+        col('time'),
+        (col('feature') + randn()).alias('feature'),
+        col('label'),
     )
     timer.split('spark df prep')
 
@@ -64,12 +67,17 @@ def main(args: Args):
     LOGGER.info('Initializing MLP Model')
     timer.split('model init')
     model = MLP(
-        params={'window_size': [3, 4], "sample_strategy": ['boolean']},
+        params={
+            'window_size': [3, 5],
+            'sample_strategy': ['boolean'],
+            'num_hidden_layers': [0, 1, 2],
+            'final_activation': ['relu', 'sigmoid'],
+        },
         dataset=df,
         spark=spark,
-        time_col="time",
-        value_col="feature",
-        label_col="label",
+        time_col='time',
+        value_col='feature',
+        label_col='label',
         num_workers=2,
     )
     timer.split('model init')
