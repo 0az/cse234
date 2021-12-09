@@ -32,7 +32,7 @@ def init_logging() -> None:
         output_handler = logging.FileHandler(output)
         output_handler.setLevel(OUTPUT)
         output_handler.addFilter(OutputFilter())
-    ROOT.addHandler(output_handler)
+        ROOT.addHandler(output_handler)
 
 
 # def checkpoint(logger: logging.Logger, label: str) -> None:
