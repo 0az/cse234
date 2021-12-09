@@ -4,6 +4,12 @@ from cerebro_ts.utils import positive_int
 
 ap = argparse.ArgumentParser()
 ap.add_argument(
+    '--workers',
+    '-w',
+    type=positive_int,
+    help='Number of Cerebro worker instances',
+)
+ap.add_argument(
     '--size',
     '-s',
     type=positive_int,
@@ -29,7 +35,7 @@ store_type.set_defaults(store_type='local')
 ap.add_argument(
     '--store-path',
     default='/tmp/cerebro',
-    help='The location of the Cerebro data store.',
+    help='Location of the Cerebro data store.',
 )
 args = ap.parse_args()
 

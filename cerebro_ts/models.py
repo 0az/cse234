@@ -53,7 +53,7 @@ class MLP:
         dataset,
         spark,
         cache_prepped_data: bool = False,
-        num_workers: int = 1,
+        n_workers: int = 1,
         time_col: str = "time",
         label_col: str = "label",
         id_col: str = "id",

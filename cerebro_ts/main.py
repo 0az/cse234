@@ -13,6 +13,7 @@ class Args:
     size: int
     store_type: str
     store_path: str
+    workers: int
 
 
 def main(args: Args):
@@ -80,7 +81,7 @@ def main(args: Args):
         time_col='time',
         value_col='feature',
         label_col='label',
-        num_workers=2,
+        n_workers=args.workers,
         store_type=args.store_type,
         store_path=args.store_path,
     )
