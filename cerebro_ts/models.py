@@ -318,7 +318,7 @@ class LSTM(Model):
         input_dim = self.input_dim
         model.add(tf.keras.layers.Input(shape=input_dim, name="features"))
         model.add(tf.keras.layers.Reshape((1, -1)))
-        if params["num_hidden_layers"] > 1:
+        if params["num_hidden_layers"] >= 1:
             for i in range(params['num_hidden_layers']):
                 model.add(tf.keras.layers.LSTM(params['hidden_dim'], return_sequences=True, name=f'lstm{i}'))
         model.add(
