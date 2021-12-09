@@ -55,6 +55,6 @@ from cerebro_ts.logs import init_logging
 # Needs to happen before main is imported
 init_logging()
 
-from cerebro_ts.main import main
+from cerebro_ts.main import experiment
 
-main(args)  # type: ignore
+experiment(args)  # type: ignore

@@ -38,8 +38,7 @@ LARGE_GRID.update(
     momentum=[0.9, 0.8],
 )
 
-
-def main(args: Args):
+def experiment(args: Args):
     if args.size < 1:
         raise ValueError('Size must be at least 1, got %d' % args.size)
     LOGGER.print('---')
@@ -50,8 +49,8 @@ def main(args: Args):
     timer = Timer()
     timer.start()
 
-    LOGGER.debug('Starting main')
-    timer.split('main')
+    LOGGER.debug('Starting experiment')
+    timer.split('experiment')
 
     LOGGER.info('SparkSession: Init starting')
     spark = SparkSession.builder.getOrCreate()
@@ -116,8 +115,10 @@ def main(args: Args):
     model.train(epochs=1)
     timer.split('model train')
     LOGGER.info('Training complete')
-    timer.split('main')
+    timer.split('experiment')
 
     for name, splits in timer.get_times().items():
         if splits:
             LOGGER.print(f'{name}: {splits[-1]:.3f}s')
+
+    LOGGER.info('Completed experiment')
