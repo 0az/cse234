@@ -11,9 +11,12 @@ LOGGER = get_logger(__name__)
 
 class Args:
     size: int
+    workers: int
+
+
+class ExperimentArgs(Args):
     store_type: str
     store_path: str
-    workers: int
     grid_preset: str
 
 
@@ -38,7 +41,8 @@ LARGE_GRID.update(
     momentum=[0.9, 0.8],
 )
 
-def experiment(args: Args):
+
+def experiment(args: ExperimentArgs):
     if args.size < 1:
         raise ValueError('Size must be at least 1, got %d' % args.size)
     LOGGER.print('---')
