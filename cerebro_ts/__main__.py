@@ -7,6 +7,7 @@ ap.add_argument(
     '--workers',
     '-w',
     type=positive_int,
+    default=1,
     help='Number of Cerebro worker instances',
 )
 ap.add_argument(
