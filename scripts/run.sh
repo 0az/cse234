@@ -6,6 +6,7 @@ cd cse234 || exit
 
 export PATH=/opt/py3.7-pyspark2.4-venv/bin/:"$PATH"
 export OUTPUT_FILE=/tmp/cerebro.log
+export TF_CPP_MIN_LOG_LEVEL=2
 
 exec /opt/spark/bin/spark-submit \
 	--num-executors "${EXECUTORS:-4}" \
