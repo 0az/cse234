@@ -1,5 +1,6 @@
 import inspect
 import logging
+import os
 
 from .utils import timestamp
 
@@ -26,6 +27,13 @@ def init_logging() -> None:
     ROOT.addHandler(handler)
     ROOT.addHandler(stdout)
 
+    output = os.getenv('OUTPUT_FILE')
+    if output:
+        output_handler = logging.FileHandler(output)
+        output_handler.setLevel(OUTPUT)
+        output_handler.addFilter(OutputFilter())
+    ROOT.addHandler(output_handler)
+
 
 # def checkpoint(logger: logging.Logger, label: str) -> None:
 #     logger.info()
@@ -45,6 +53,11 @@ class OutputLogger(logging.Logger):
             self._log(OUTPUT, msg, args, **kwargs)
 
     print = output
+
+
+class OutputFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord):
+        return record.levelno == OUTPUT
 
 
 def get_logger(name: str = None) -> OutputLogger:

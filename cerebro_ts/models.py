@@ -222,12 +222,9 @@ class MLP:
                     self.best_model = model.keras()
                     self.best_w = w
 
-        LOGGER.print('MLP Training complete:')
+        LOGGER.info('MLP Training complete:')
         LOGGER.print(f'\tValidation accuracy: {self.best_acc}')
         LOGGER.print(f'\tWindow size: {self.best_w}')
-
-        # task = delayed(self._train_one)
-        # Parallel(n_jobs=len(self.dataprep_params["window_size"]))(task(w) for w in self.dataprep_params["window_size"])
 
     def predict(self, X):
         """Predicts on given data."""

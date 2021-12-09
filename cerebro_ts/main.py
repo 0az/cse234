@@ -19,6 +19,10 @@ class Args:
 def main(args: Args):
     if args.size < 1:
         raise ValueError('Size must be at least 1, got %d' % args.size)
+    LOGGER.print('---')
+    LOGGER.print('config:')
+    LOGGER.print('  size: %d', size)
+    LOGGER.print('  workers: %d', size)
 
     timer = Timer()
     timer.start()
