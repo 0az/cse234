@@ -17,14 +17,19 @@ ap.add_argument(
     default=1,
     help='Approximate dataset size in MB',
 )
-ap.add_argument(
+
+sp = ap.add_subparsers('Commands', dest='command')
+
+xp = sp.add_parser('experiment')
+
+xp.add_argument(
     '--grid-preset',
     '-g',
     choices=('small', 'large'),
     default='small',
     help='Hyperparameter grid preset',
 )
-store_type = ap.add_mutually_exclusive_group()
+store_type = xp.add_mutually_exclusive_group()
 store_type.add_argument(
     '--local',
     action='store_const',
@@ -40,7 +45,7 @@ store_type.add_argument(
     help='Use the HDFSStore Cerebro storage driver.',
 )
 store_type.set_defaults(store_type='local')
-ap.add_argument(
+xp.add_argument(
     '--store-path',
     default='/tmp/cerebro',
     help='Location of the Cerebro data store.',
