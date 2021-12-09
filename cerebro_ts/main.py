@@ -21,8 +21,8 @@ def main(args: Args):
         raise ValueError('Size must be at least 1, got %d' % args.size)
     LOGGER.print('---')
     LOGGER.print('config:')
-    LOGGER.print('  size: %d', size)
-    LOGGER.print('  workers: %d', size)
+    LOGGER.print('  size: %d', args.size)
+    LOGGER.print('  workers: %d', args.workers)
 
     timer = Timer()
     timer.start()
