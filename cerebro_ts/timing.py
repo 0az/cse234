@@ -27,3 +27,9 @@ class Timer:
             splits = self.splits[name]
             results[name] = [v - splits[0] for v in splits] if splits else ()
         return results
+
+    def print_splits(self, print=print) -> None:
+        for name, splits in self.get_times().items():
+            if splits:
+                print(f'{name}: {splits[-1]:.3f}s')
+

@@ -121,8 +121,6 @@ def experiment(args: ExperimentArgs):
     LOGGER.info('Training complete')
     timer.split('experiment')
 
-    for name, splits in timer.get_times().items():
-        if splits:
-            LOGGER.print(f'{name}: {splits[-1]:.3f}s')
+    timer.print_splits(LOGGER.print)
 
     LOGGER.info('Completed experiment')
