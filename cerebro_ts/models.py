@@ -52,12 +52,14 @@ class MLP:
         params,
         dataset,
         spark,
-        cache_prepped_data=False,
-        num_workers=1,
-        time_col="time",
-        label_col="label",
-        id_col="id",
-        value_col="value",
+        cache_prepped_data: bool = False,
+        num_workers: int = 1,
+        time_col: str = "time",
+        label_col: str = "label",
+        id_col: str = "id",
+        value_col: str = "value",
+        store_type: str = 'local',
+        store_path: str = '/tmp/cerebro',
     ):
         """
         Dataset must be in form of (id, timestamp, value, label)
@@ -102,9 +104,15 @@ class MLP:
         self.backend = SparkBackend(
             spark_context=self.spark.sparkContext, num_workers=self.num_workers
         )
-        self.store = LocalStore(
-            prefix_path=os.path.join(os.getcwd(), "cerebro_store")
-        )
+        if store_type == 'local':
+            self.store = LocalStore(prefix_path=store_path)
+        elif store_type == 'hdfs':
+            self.store = HDFSStore(prefix_path=store_path)
+        else:
+            raise ValueError(
+                'Invalid store type: expected local or hdfs,'
+                f' got {store_type}'
+            )
 
         if self.cache_prepped_data:
             # compute the dataframes now and cache them

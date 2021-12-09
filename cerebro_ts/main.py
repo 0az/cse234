@@ -11,6 +11,8 @@ LOGGER = get_logger(__name__)
 
 class Args:
     size: int
+    store_type: str
+    store_path: str
 
 
 def main(args: Args):
@@ -79,6 +81,8 @@ def main(args: Args):
         value_col='feature',
         label_col='label',
         num_workers=2,
+        store_type=args.store_type,
+        store_path=args.store_path,
     )
     timer.split('model init')
 

@@ -10,6 +10,27 @@ ap.add_argument(
     default=1,
     help='Approximate dataset size in MB',
 )
+store_type = ap.add_mutually_exclusive_group()
+store_type.add_argument(
+    '--local',
+    action='store_const',
+    const='local',
+    dest='store_type',
+    help='Use the LocalStore Cerebro storage driver.',
+)
+store_type.add_argument(
+    '--hdfs',
+    action='store_const',
+    const='hdfs',
+    dest='store_type',
+    help='Use the HDFSStore Cerebro storage driver.',
+)
+store_type.set_defaults(store_type='local')
+ap.add_argument(
+    '--store-path',
+    default='/tmp/cerebro',
+    help='The location of the Cerebro data store.',
+)
 args = ap.parse_args()
 
 
