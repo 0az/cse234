@@ -25,12 +25,14 @@ PARAMS = {
     'final_activation': ['relu', 'sigmoid'],
 }
 # 2 meta, 6 hyper
-SMALL_GRID = PARAMS.copy().update(
+SMALL_GRID = PARAMS.copy()
+SMALL_GRID.update(
     batch_size=[8],
     num_hidden_layers=[0, 1, 2],
 )
 # 2 meta, 40 hyper
-LARGE_GRID = PARAMS.copy().update(
+LARGE_GRID = PARAMS.copy()
+LARGE_GRID.update(
     batch_size=[200],
     lr=[0.01, 0.005, 0.001, 0.0005, 0.0001],
     momentum=[0.9, 0.8],
