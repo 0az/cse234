@@ -17,6 +17,13 @@ ap.add_argument(
     default=1,
     help='Approximate dataset size in MB',
 )
+ap.add_argument(
+    '--grid-preset',
+    '-g',
+    choices=('small', 'large'),
+    default='small',
+    help='Hyperparameter grid preset',
+)
 store_type = ap.add_mutually_exclusive_group()
 store_type.add_argument(
     '--local',

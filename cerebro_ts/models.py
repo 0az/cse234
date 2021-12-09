@@ -223,8 +223,8 @@ class MLP:
                     self.best_w = w
 
         LOGGER.info('MLP Training complete:')
-        LOGGER.print(f'\tValidation accuracy: {self.best_acc}')
-        LOGGER.print(f'\tWindow size: {self.best_w}')
+        LOGGER.print(f'  Validation accuracy: {self.best_acc}')
+        LOGGER.print(f'  Window size: {self.best_w}')
 
     def predict(self, X):
         """Predicts on given data."""

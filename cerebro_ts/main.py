@@ -14,6 +14,27 @@ class Args:
     store_type: str
     store_path: str
     workers: int
+    grid_preset: str
+
+
+PARAMS = {
+    'window_size': [3, 5],
+    'batch_size': [8],
+    'sample_strategy': ['boolean'],
+    'num_hidden_layers': [0, 1],
+    'final_activation': ['relu', 'sigmoid'],
+}
+# 2 meta, 6 hyper
+SMALL_GRID = PARAMS.copy().update(
+    batch_size=[8],
+    num_hidden_layers=[0, 1, 2],
+)
+# 2 meta, 40 hyper
+LARGE_GRID = PARAMS.copy().update(
+    batch_size=[200],
+    lr=[0.01, 0.005, 0.001, 0.0005, 0.0001],
+    momentum=[0.9, 0.8],
+)
 
 
 def main(args: Args):
@@ -73,13 +94,10 @@ def main(args: Args):
 
     LOGGER.info('Initializing MLP Model')
     timer.split('model init')
+
+    params = SMALL_GRID if args.grid_preset == 'small' else LARGE_GRID
     model = MLP(
-        params={
-            'window_size': [3, 5],
-            'sample_strategy': ['boolean'],
-            'num_hidden_layers': [0, 1, 2],
-            'final_activation': ['relu', 'sigmoid'],
-        },
+        params=params,
         dataset=df,
         spark=spark,
         time_col='time',
