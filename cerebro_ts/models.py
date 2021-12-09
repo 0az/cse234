@@ -86,7 +86,7 @@ class MLP:
         self.dataset = dataset.select(*valid_cols)
         self.spark = spark
         self.cache_prepped_data = cache_prepped_data
-        self.num_workers = num_workers
+        self.n_workers = n_workers
 
         self.input_dim = None
 
@@ -102,7 +102,7 @@ class MLP:
 
         # Create cerebro primitives
         self.backend = SparkBackend(
-            spark_context=self.spark.sparkContext, num_workers=self.num_workers
+            spark_context=self.spark.sparkContext, num_workers=self.n_workers
         )
         if store_type == 'local':
             self.store = LocalStore(prefix_path=store_path)
@@ -212,7 +212,7 @@ class MLP:
                     label_col=self.label_col,
                     id_col=self.id_col,
                     value_col=self.value_col,
-                ).repartition(self.num_workers)
+                ).repartition(self.n_workers)
 
                 model = model_selection.fit(prepped)
                 if model.get_history()['val_acc'][0] > self.best_acc:
