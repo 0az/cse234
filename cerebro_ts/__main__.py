@@ -26,7 +26,14 @@ ap.add_argument(
 
 sp = ap.add_subparsers(title='Commands', dest='command')
 
-xp = sp.add_parser('experiment')
+xp = sp.add_parser(
+    'experiment',
+    help='Run an experiment on a provided dataset',
+)
+gp = sp.add_parser(
+    'generate',
+    help='Generate a synthetic dataset',
+)
 
 xp.add_argument(
     '--grid-preset',
