@@ -24,7 +24,7 @@ ap.add_argument(
     help='Dataset path',
 )
 
-sp = ap.add_subparsers('Commands', dest='command')
+sp = ap.add_subparsers(title='Commands', dest='command')
 
 xp = sp.add_parser('experiment')
 
