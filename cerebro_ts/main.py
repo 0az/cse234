@@ -96,12 +96,13 @@ def generate(args: GenerateArgs):
         col('time'),
         (col('feature') + randn()).alias('feature'),
         col('label'),
+        (col('id') // 100).alias('partition')
     )
     timer.split('spark df prep')
 
     LOGGER.info('Serializing Spark DataFrame')
     timer.split('spark df write')
-    df.write.parquet(args.data_path, partitionBy='id')
+    df.write.parquet(args.data_path, partitionBy='partition')
     timer.split('spark df write')
     LOGGER.info('Finished serialization')
 
