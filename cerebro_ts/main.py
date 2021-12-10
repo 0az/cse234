@@ -126,10 +126,10 @@ def experiment(args: ExperimentArgs):
     timer.split('experiment')
 
     LOGGER.info('---')
-    LOGGER.info('config:')
-    LOGGER.info('  size: %d', args.size)
-    LOGGER.info('  workers: %d', args.workers)
-    LOGGER.info('  data_path: %s', args.data_path)
+    LOGGER.print('config:')
+    LOGGER.print('  size: %d', args.size)
+    LOGGER.print('  workers: %d', args.workers)
+    LOGGER.print('  data_path: %s', args.data_path)
 
     LOGGER.info('SparkSession: Init starting')
     spark = SparkSession.builder.getOrCreate()
