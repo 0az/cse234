@@ -1,8 +1,9 @@
 import argparse
 
-from cerebro_ts.utils import positive_int
+from cerebro_ts.utils import comma_separated_positive_ints, positive_int
 
 ap = argparse.ArgumentParser()
+
 
 def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -25,6 +26,7 @@ def add_common_args(parser: argparse.ArgumentParser):
         required=True,
         help='Dataset path',
     )
+
 
 sp = ap.add_subparsers(title='Commands', dest='command')
 
@@ -69,6 +71,12 @@ xp.add_argument(
     '--store-path',
     default='/tmp/cerebro',
     help='Location of the Cerebro data store',
+)
+xp.add_argument(
+    '--window-size-grid',
+    type=comma_separated_positive_ints,
+    default=(),
+    help='List of window sizes to use',
 )
 
 args = ap.parse_args()

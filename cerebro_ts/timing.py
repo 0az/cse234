@@ -32,4 +32,3 @@ class Timer:
         for name, splits in self.get_times().items():
             if splits:
                 print(f'{name}: {splits[-1]:.3f}s')
-

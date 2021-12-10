@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import List
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import array_repeat, col, explode, lit, randn
 
@@ -19,6 +23,7 @@ class ExperimentArgs(Args):
     store_type: str
     store_path: str
     grid_preset: str
+    window_size_grid: List[int]
 
 
 class GenerateArgs(Args):
@@ -139,6 +144,8 @@ def experiment(args: ExperimentArgs):
     timer.split('model init')
 
     params = SMALL_GRID if args.grid_preset == 'small' else LARGE_GRID
+    if args.window_size_grid:
+        params['window_size'] = args.window_size_grid
     model = MLP(
         params=params,
         dataset=df,
