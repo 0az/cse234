@@ -96,7 +96,7 @@ def generate(args: GenerateArgs):
         col('time'),
         (col('feature') + randn()).alias('feature'),
         col('label'),
-        (col('id') // 100).alias('partition')
+        (col('id') / 100).alias('partition')
     )
     timer.split('spark df prep')
 
