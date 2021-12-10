@@ -125,7 +125,7 @@ def experiment(args: ExperimentArgs):
     timer.start()
     timer.split('experiment')
 
-    LOGGER.info('---')
+    LOGGER.print('---')
     LOGGER.print('config:')
     LOGGER.print('  size: %d', args.size)
     LOGGER.print('  workers: %d', args.workers)
