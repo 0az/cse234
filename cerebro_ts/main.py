@@ -12,12 +12,17 @@ LOGGER = get_logger(__name__)
 class Args:
     size: int
     workers: int
+    data_path: str
 
 
 class ExperimentArgs(Args):
     store_type: str
     store_path: str
     grid_preset: str
+
+
+class GenerateArgs(Args):
+    pass
 
 
 PARAMS = {
@@ -42,19 +47,21 @@ LARGE_GRID.update(
 )
 
 
-def experiment(args: ExperimentArgs):
-    if args.size < 1:
-        raise ValueError('Size must be at least 1, got %d' % args.size)
-    LOGGER.print('---')
-    LOGGER.print('config:')
-    LOGGER.print('  size: %d', args.size)
-    LOGGER.print('  workers: %d', args.workers)
+def generate(args: GenerateArgs):
+    if not args.data_path.startswith('hdfs://'):
+        raise ValueError('Output path must be on HDFS')
+
+    LOGGER.info('---')
+    LOGGER.info('config:')
+    LOGGER.info('  size: %d', args.size)
+    LOGGER.info('  workers: %d', args.workers)
+    LOGGER.info('  data_path: %s', args.data_path)
 
     timer = Timer()
     timer.start()
 
-    LOGGER.debug('Starting experiment')
-    timer.split('experiment')
+    LOGGER.debug('Starting generation')
+    timer.split('generation')
 
     LOGGER.info('SparkSession: Init starting')
     spark = SparkSession.builder.getOrCreate()
@@ -93,9 +100,40 @@ def experiment(args: ExperimentArgs):
     timer.split('spark df prep')
 
     LOGGER.info('Serializing Spark DataFrame')
-    timer.split('spark df persist')
-    df = df.persist()
-    timer.split('spark df persist')
+    timer.split('spark df write')
+    df.write.parquet(args.data_path, partitionBy='id')
+    timer.split('spark df write')
+    LOGGER.info('Finished serialization')
+
+    timer.split('generation')
+    timer.print_splits()
+
+    LOGGER.info('Finished generation')
+
+
+def experiment(args: ExperimentArgs):
+    if args.size < 1:
+        raise ValueError('Size must be at least 1, got %d' % args.size)
+
+    LOGGER.info('Starting experiment')
+    timer = Timer()
+    timer.start()
+    timer.split('experiment')
+
+    LOGGER.info('---')
+    LOGGER.info('config:')
+    LOGGER.info('  size: %d', args.size)
+    LOGGER.info('  workers: %d', args.workers)
+    LOGGER.info('  data_path: %s', args.data_path)
+
+    LOGGER.info('SparkSession: Init starting')
+    spark = SparkSession.builder.getOrCreate()
+    LOGGER.info('SparkSession: Init complete')
+
+    LOGGER.info('Loading data')
+    timer.split('data load')
+    df = spark.read.parquet(args.data_path)
+    timer.split('data load')
 
     LOGGER.info('Initializing MLP Model')
     timer.split('model init')

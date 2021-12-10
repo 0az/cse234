@@ -17,6 +17,12 @@ ap.add_argument(
     default=1,
     help='Approximate dataset size in MB',
 )
+ap.add_argument(
+    '--data-path',
+    '-p',
+    required=True,
+    help='Dataset path',
+)
 
 sp = ap.add_subparsers('Commands', dest='command')
 
@@ -35,20 +41,20 @@ store_type.add_argument(
     action='store_const',
     const='local',
     dest='store_type',
-    help='Use the LocalStore Cerebro storage driver.',
+    help='Use the LocalStore Cerebro storage driver',
 )
 store_type.add_argument(
     '--hdfs',
     action='store_const',
     const='hdfs',
     dest='store_type',
-    help='Use the HDFSStore Cerebro storage driver.',
+    help='Use the HDFSStore Cerebro storage driver',
 )
 store_type.set_defaults(store_type='local')
 xp.add_argument(
     '--store-path',
     default='/tmp/cerebro',
-    help='Location of the Cerebro data store.',
+    help='Location of the Cerebro data store',
 )
 args = ap.parse_args()
 
@@ -60,6 +66,9 @@ from cerebro_ts.logs import init_logging
 # Needs to happen before main is imported
 init_logging()
 
-from cerebro_ts.main import experiment
+from cerebro_ts.main import experiment, generate
 
-experiment(args)  # type: ignore
+if args.command == 'generate':
+    generate(args)
+elif args.command == 'experiment':
+    experiment(args)  # type: ignore
